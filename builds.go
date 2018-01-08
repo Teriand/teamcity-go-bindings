@@ -25,6 +25,7 @@ func (c *Client) GetBuildDetails(id BuildID) (BuildDetails, error) {
 
 	for res := range chData.Response {
 		body, err := processResponse(res)
+		defer res.Body.Close()
 		if err != nil {
 			return buildDetails, err
 		}
@@ -57,6 +58,7 @@ func (c *Client) GetBuildsByParams(bl BuildLocator) (Builds, error) {
 
 		for res := range chData.Response {
 			body, err := processResponse(res)
+			defer res.Body.Close()
 			if err != nil {
 				return builds, err
 			}
@@ -98,6 +100,7 @@ func (c *Client) GetBuildStat(id BuildID) (BuildStatistics, error) {
 
 	for res := range chData.Response {
 		body, err := processResponse(res)
+		defer res.Body.Close()
 		if err != nil {
 			return stat, err
 		}

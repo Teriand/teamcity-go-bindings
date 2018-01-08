@@ -23,6 +23,7 @@ func (c *Client) GetAllBuildConfigurations() (BuildConfigurations, error) {
 
 	for res := range chData.Response {
 		body, err := processResponse(res)
+		defer res.Body.Close()
 		if err != nil {
 			return buildConfigs, err
 		}
