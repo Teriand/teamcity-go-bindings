@@ -183,7 +183,7 @@ func (c *Client) GetLatestBuild(bl BuildLocator) (Builds, error) {
 						Status:    bl.Status,
 						Running:   bl.Running,
 						Canceled:  bl.Canceled,
-						Count:     1,
+						Count:     bl.Count,,
 					}
 					chFilters <- f
 				}
@@ -202,7 +202,7 @@ func (c *Client) GetLatestBuild(bl BuildLocator) (Builds, error) {
 					Status:    bl.Status,
 					Running:   bl.Running,
 					Canceled:  bl.Canceled,
-					Count:     1,
+					Count:     bl.Count,,
 				}
 				chFilters <- f
 			}(buildType)
