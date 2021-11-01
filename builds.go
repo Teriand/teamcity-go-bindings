@@ -121,7 +121,11 @@ func (c *Client) getBuildsByParamsPipelined(in <-chan BuildLocator, out chan<- B
 				return
 			}
 			if len(build.Builds) > 0 {
-				out <- build.Builds[0]
+				//out <- build.Builds[0]
+				for i := range build.Builds {
+					//log.Printf("TC Build: %s", build.Builds[i] )
+					out <- build.Builds[i]
+				}
 			} else {
 				log.Printf("No builds found for build configuration '%s', branch '%s'", f.BuildType, f.Branch)
 				return
