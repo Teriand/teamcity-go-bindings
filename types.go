@@ -83,7 +83,7 @@ type BuildLocator struct {
 	Branch    string      `yaml:"branch"`
 	Status    string      `yaml:"status"`
 	Running   string      `yaml:"running"`
-	Canceled  string      `yaml:"canceled"`
+	SinceDate  string      `yaml:"sincedate"`
 	Count     int
 }
 
