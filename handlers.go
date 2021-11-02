@@ -34,7 +34,7 @@ func (c *Client) processDataFlow() {
 			d.Request.Close = true
 			res, err := c.HTTPClient.Do(d.Request)
 			if err != nil {
-				log.Println(err)
+				log.Println("processDataFlow %s",err)
 				close(d.Response)
 				return
 			}
@@ -42,7 +42,7 @@ func (c *Client) processDataFlow() {
 				d.Request.SetBasicAuth(c.Username, c.Password)
 				res, err = c.HTTPClient.Do(d.Request)
 				if err != nil {
-					log.Println(err)
+					log.Println("processDataFlow %s",err)
 					close(d.Response)
 					return
 				}
