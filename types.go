@@ -29,6 +29,8 @@ type BuildDetails struct {
 }
 
 type BuildID int
+type AgentID int
+type PoolID int
 
 type BuildConfigurations struct {
 	Count      int         `json:"count"`
@@ -45,6 +47,15 @@ type BuildType struct {
 	WebURL      string      `json:"webUrl"`
 	Description string      `json:"description,omitempty"`
 	Paused      bool        `json:"paused,omitempty"`
+}
+type Agent struct {
+    ID  AgentID  `json:"id"`
+    Name string `json:"name"`
+    Pool Pool `json:"Pool"`
+}
+type Pool struct {
+    ID  PoolID  `json:"id"`
+    Name string `json:"name"`
 }
 
 type BuildTypeID string
@@ -65,9 +76,14 @@ type Build struct {
 	Number      string      `json:"number"`
 	Status      string      `json:"status"`
 	State       string      `json:"state"`
+	Running     string      `json:"running"`
 	BranchName  string      `json:"branchName"`
 	Href        string      `json:"href"`
 	WebURL      string      `json:"webUrl"`
+	QueuedDate  string      `json:"queuedDate"`
+	StartDate   string      `json:"startDate"`
+	FinishDate  string      `json:"finishDate"`
+	Agent       Agent       `json:"agent"`
 }
 
 type Builds struct {
@@ -84,7 +100,13 @@ type BuildLocator struct {
 	Status    string      `yaml:"status"`
 	Running   string      `yaml:"running"`
 	SinceDate  string      `yaml:"sincedate"`
+	QueuedDate  string      `yaml:"queueddate"`
+	FinishDate  string      `yaml:"finishdate"`
+	StartDate   string      `json:"startdate"`
+	Canceled  string      `yaml:"canceled"`
+	State  string      `yaml:"state"`
 	Count     int
+
 }
 
 type BuildStatistics struct {

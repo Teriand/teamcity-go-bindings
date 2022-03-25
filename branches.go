@@ -24,6 +24,7 @@ func (c *Client) GetAllBranches(bt BuildTypeID) (Branches, error) {
 
 	for res := range chData.Response {
 		body, err := processResponse(res)
+		defer res.Body.Close()
 		if err != nil {
 			return branches, err
 		}

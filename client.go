@@ -1,6 +1,10 @@
 package teamcity
 
-import "github.com/sethgrid/pester"
+import (
+	"time"
+
+	"github.com/sethgrid/pester"
+)
 
 func New(url, username, password string, concurrencyLimit int) *Client {
 	if concurrencyLimit == 0 {
@@ -12,6 +16,7 @@ func New(url, username, password string, concurrencyLimit int) *Client {
 	http.MaxRetries = 5
 	http.Backoff = pester.ExponentialBackoff
 	http.KeepLog = true
+	http.Timeout = 60 * time.Second
 
 	client := &Client{
 		HTTPClient: http,

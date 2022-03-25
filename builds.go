@@ -6,6 +6,10 @@ import (
 	"log"
 	"net/http"
 	"sync"
+
+	"runtime"
+	"strings"
+	"strconv"
 )
 
 func (c *Client) GetBuildDetails(id BuildID) (BuildDetails, error) {
@@ -37,11 +41,12 @@ func (c *Client) GetBuildDetails(id BuildID) (BuildDetails, error) {
 	return buildDetails, nil
 }
 
-func (c *Client) GetBuildsByParams(bl BuildLocator) (Builds, error) {
+func (c *Client) GetBuildsByParams(bl BuildLocator,fields string) (Builds, error) {
 	builds := Builds{}
 
-	url := fmt.Sprint(c.URL, "/app/rest/builds/?locator=", convertLocatorToString(bl))
-	log.Println("TC GetBuildsByParams url %s",url)
+	url := fmt.Sprint(c.URL, "/app/rest/builds/?locator=", convertLocatorToString(bl),"&fields=",fields)
+	log.Printf("[%d]TC GetBuildsByParams url:",goid(),url)
+
 	for {
 		buildsIter := Builds{}
 		chData := DataFlow{
@@ -118,20 +123,20 @@ func (c *Client) GetBuildStat(id BuildID) (BuildStatistics, error) {
 }
 
 
-func (c *Client) getBuildsByParamsPipelinedNew(f BuildLocator, out chan<- Build) {
-	build, err := c.GetBuildsByParams(f)
+func (c *Client) getBuildsByParamsPipelinedNew(f BuildLocator, fields string,  out chan<- Build) {
+	build, err := c.GetBuildsByParams(f,fields)
 	if err != nil {
 		log.Println("TC getBuildsByParamsPipelinedNew %q",err)
 		return
 	}
 	if len(build.Builds) > 0 {
-		log.Printf("TC getBuildsByParamsPipelinedNew Builds.Count: %d , buildType%s ", len(build.Builds), f.BuildType)
+		log.Printf("[%d]TC getBuildsByParamsPipelinedNew Builds.Count: %d \n", goid(),len(build.Builds))
 		for i := range build.Builds {
-			log.Printf("TC Build: %s", build.Builds[i] )
+			log.Printf("[%d]TC Build: %s", goid(),build.Builds[i] )
 			out <- build.Builds[i]
 		}
 	} else {
-		log.Printf("+No builds found for build configuration '%s', branch '%s'", f.BuildType, f.Branch)
+		log.Printf("[%d]TC getBuildsByParamsPipelinedNew Builds.Count: 0 \n",goid())
 		return
 	}
 	
@@ -144,7 +149,7 @@ func (c *Client) getBuildsByParamsPipelined(in <-chan BuildLocator, out chan<- B
 		wg.Add(1)
 		go func(f BuildLocator) {
 			defer wg.Done()
-			build, err := c.GetBuildsByParams(f)
+			build, err := c.GetBuildsByParams(f,"&fields=count,build(id,buildTypeId,number,status,state,webUrl)")
 			if err != nil {
 				log.Println(err)
 				return
@@ -160,28 +165,32 @@ func (c *Client) getBuildsByParamsPipelined(in <-chan BuildLocator, out chan<- B
 	wg.Wait()
 	close(out)
 }
-func (c *Client) GetLatestBuildNew(bl BuildLocator) (Builds, error) {
+func (c *Client) GetLatestBuildNew(bl BuildLocator,fields string) (Builds, error) {
 	f := BuildLocator{
 		//BuildType: bt,
 		//Branch:    branch.Name,
+		State:    bl.State,
 		Status:    bl.Status,
 		Running:   bl.Running,
-		//Canceled:  bl.Canceled,
+		Canceled:  bl.Canceled,
 		SinceDate:  bl.SinceDate,
+		StartDate:  bl.StartDate,
+		QueuedDate:  bl.QueuedDate,
+		FinishDate:  bl.FinishDate,
 		Count:     bl.Count,
 	}
 	chBuilds := make(chan Build)
 	builds := Builds{}
-	log.Printf("TC GetLatestBuildNew+" )
-	go c.getBuildsByParamsPipelinedNew(f, chBuilds)
-	log.Printf("TC GetLatestBuildNew++" )
+	//log.Printf("TC GetLatestBuildNew+" )
+	go c.getBuildsByParamsPipelinedNew(f,fields, chBuilds)
+	//log.Printf("TC GetLatestBuildNew++" )
 	wg1 := new(sync.WaitGroup)
 	wg1.Add(1)
 	go func() {
 		defer wg1.Done()
 		for build := range chBuilds {
 			builds.Builds = append(builds.Builds, build)
-			log.Printf("TC GetLatestBuildNew+append" )
+			//log.Printf("TC GetLatestBuildNew+append" )
 		}
 	}()
 
@@ -273,4 +282,15 @@ func (c *Client) GetLatestBuild(bl BuildLocator) (Builds, error) {
 
 	wg1.Wait()
 	return builds, nil
+}
+
+func goid() int {
+	var buf [64]byte
+	n := runtime.Stack(buf[:], false)
+	idField := strings.Fields(strings.TrimPrefix(string(buf[:n]), "goroutine "))[0]
+	id, err := strconv.Atoi(idField)
+	if err != nil {
+		panic(fmt.Sprintf("cannot get goroutine id: %v", err))
+	}
+	return id
 }
